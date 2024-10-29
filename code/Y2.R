@@ -64,3 +64,56 @@ sample(c(1:5)) #permutation, reordering
 sample(c(1:5), 3) #subsampling, selecting 3 random obs
 sample(c(1:5), 3, replace = T)
 
+
+#Looping Functions----
+B<- 1000
+Bmeans <- rep(NA,B)
+for(b in 1:B){
+  Bmeans[b] <- mean(sample(X,replace = T))
+}
+
+hist(Bmeans, col=2)
+quantile(Bmeans, probs = c(0.025,0.975)) #95% confidence interval
+
+#or use sapply function
+l1 <- list(a = c(1,2,3), b = 1:10, c = rnorm(10))
+lapply(l1,mean)
+sapply(l1, mean)
+l1
+#use lapply to output values from each element of l1 that are > mean
+?lapply
+lapply(l1, function(x) x[x > mean(x)] )
+
+#do the same in a for loop
+
+for(x in l1) {
+  print(x[x > mean(x)])
+}  #highlight and run all at once
+
+#can we use sapply
+sapply(l1, function(x) x[x > mean(x)] )
+#does work but it behaves like lapply, doesn't simplify be default.
+
+lapply(l1, quantile, probs = c(0.025,0.975))  #now quantile is the function
+
+#apply functions over array margins
+#matrix = 2dimensional array
+#all elements of a matrix are all of the same type
+library(dplyr)
+
+M2 <- iris %>% 
+  select(-Species)
+apply(M2,1,sum)  #margin is kept in tact, in this instance we are keeping rows (1) in tact
+#column sums:
+apply(M2, 2, sum)
+apply(M2, 2, mean)
+#proportion of obs greater than mean
+apply(M2, 2, function(x) mean(x>mean(x)))
+
+M <- array(rnorm(10^3), dim= c(10,10,10))
+
+F1 <- factor(c(rep("smoke", 10), rep("NoSmoke",10)))
+BP<- rnorm(20,80)
+tapply(BP, F1, mean)
+#or
+tapply(iris$Sepal.Length,iris$Species, mean)
