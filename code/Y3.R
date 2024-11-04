@@ -106,5 +106,47 @@ shoesummary<-merge(shoes,summarydata,by="ExerciseType",all.x=TRUE)
 shoesummary$Percent<-with(shoesummary,Sales*100/Total)
 shoesummary #percentage of each type of shoe, by its type
 
+#Adding Margins to a data set ----
 
-                        
+#You may also need to summarize all variables corresponding to each observations, especially when all
+#variables are recorded on the same scale. To do this,you will need to treat a data frame as a matrix and use 
+#rowMeans function to average over the columns instead of rows, put the results in a new data set
+#or combine it with the original
+
+#for example with a data set of different people as the observations, and columns as the seasons
+frame <-read.table("./data/sales.txt",header=TRUE,as.is="name")
+#calculate each persons average sales and departure from grand mean:
+people<-rowMeans(frame[,2:5]) #mean of columns 2-5
+(peopleeffect <-people-mean(people)) #everyones means, averaged
+#season means
+(season<-colMeans(frame[,2:5]))
+#dataframe to summarize seasonal effects
+newrow<-frame[1,]
+newrow[1,1]<-"SeasonalEffect"
+newrow[1,2:5]<-season-mean(season)
+
+
+newframe<-frame
+newframe[,2:5]<-frame[,2:5]-mean(season)
+data.frame(rbind(newframe,newrow),
+           people=c(peopleeffect,mean(people)))
+
+#Changing observations to variables using reshape2 ----
+#now we can flip data, reshape2 transposes data sets turning obs into variables
+#and variables into observations
+
+#Example:
+# you have data for baseball players and you have a column for type of data - 
+#salary or batting average, you end up having multiple obs/per person
+#we want to change batting average and salary into variables
+
+library(reshape2)
+baseball <- read.table("./data/Transpos.dat",
+                       head = FALSE, col.names = c("Team", "Player", "Type", "Entry"))
+#first use melt to add obs for each "entry", this makes data set longer
+baseball.m <- melt(baseball,
+                   idvars=c("Team", "Player", "Type"), measure.vars = "Entry")
+head(baseball.m)
+
+# The data are then transposed using the dcast function.
+dcast(baseball.m, Team+Player~Type)
