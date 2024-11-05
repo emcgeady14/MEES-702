@@ -57,6 +57,22 @@ TDx(as.Date(c("2020-12-31","2028-10-16")))
 
 dates <- TDx(as.Date(from= as.Date("2020-12-31"),
             to = as.Date("2021-12-31"), by =5))
+#example plot
+iris
+x = iris$Sepal.Length
+y = iris$Petal.Length
+
+plot(x,y,
+     las=1,
+     pch = 15, col="tomato")
+
+#made this code into a function:
+
+source("code/datefunction.R")
+myplot(iris$Sepal.Length,iris$Petal.Length) #have to define x and y but can keep defaults
+myplot(iris$Sepal.Length,iris$Petal.Length, pch = 5, cex=2) #can respecify arguments
+
+
 #### TOOLS
 traceback()
 
