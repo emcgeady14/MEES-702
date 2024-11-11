@@ -80,7 +80,36 @@ mean(x)
 traceback()
 
 # browser() and debug()
-source('MyFunctions.R')
-
-
 debug()
+browser()
+
+source('code/MyFunctions.R')
+
+#using traceback
+funPower(2, 3)
+traceback()  #shows you where error is
+
+#using line-by-line execution
+x = 2; y= 3
+funPower2 <- function(x, y){
+  z <- x^2
+}
+z = x^y
+ra <- funRatio(x, u)  #found error here after going line by line
+#convenient when you have a small function
+
+#Using debug
+#mark a function that will be debugged
+debug(funPower)
+#once function is called it will go into debug mode and we'll be able to execute
+#line by line
+funPower(2,3)
+#keep executing (next) until you find error
+#after finishing debugging:
+undebug(funPower)
+
+
+#using browser
+#place browser() in your function code and resource the function
+#will browse line by line
+#after fixing errors remove browser and source function again
