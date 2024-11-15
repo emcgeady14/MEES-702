@@ -67,7 +67,7 @@ myplot <- function(data,
   #calculate summary stats
   dsum <- longd %>% 
     group_by(Year) %>% 
-    summarize (mean = mean(Value, na.rm=T),  #remove na values 
+    summarize (mean = mean(Value, na.rm=T),  #remove NA values 
                median = median(Value, na.rm=T), 
                Q1 = quantile(Value,0.25, na.rm = T), 
                Q3 = quantile(Value,0.75, na.rm = T))
