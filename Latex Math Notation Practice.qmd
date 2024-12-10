@@ -1,0 +1,19 @@
+---
+title: "LaTex Overview"
+format: pdf
+---
+
+Here we define function $f(d)$:
+
+$$
+\Phi(x)= \frac{1}{\sqrt{2\pi}} \int^x_{-\infty} e^{-t^2/2} dt,
+$$ {#eq-normal}
+where $\pi \approx$  explain each element...
+plug in R: `r round(pi,3)` starts r notation
+
+In latex arguments are placed in curly braces.
+Backslashes ebfore functions.
+Upper limit use ^
+lower limit use _ or curly braces
+frac- first {numerator}{denominator}
+use a descriptive unique label @eq-normal -- look in quarto cross references
