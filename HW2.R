@@ -39,3 +39,5 @@ ccf_boot2(diff(BJsales.lead), diff(BJsales),plot="Spearman")
 
 #bootstrapped p-values
 
+#check methods for packages used
+
