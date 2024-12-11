@@ -1,0 +1,107 @@
+---
+title: "Replication of Lyubchich et al. (2020): A data-driven approach to detecting change points in linear regression models"
+author: Emi McGeady
+date: today
+format: pdf
+knitr:
+    opts_chunk:
+        message: false
+        warning: false
+        comment: "#>"
+        R.options:
+            knitr.graphics.auto_pdf: true 
+---
+
+```{r}
+#| echo: false
+# Load Data:
+d <- read.csv("./data/anoxia_jmt3_SL.csv")
+
+#Load Packages:
+library(rpart)
+#rpart::rpart() package
+#rpart::cart()
+#library(rpart.plot)
+library(funtimes)
+#funtimes::mcusum.test()
+library(knitr)
+```
+
+```{r}
+#| echo: false
+# Data Processing:
+
+#regression models:
+m8 <- lm(EarlySummerAnoxicVol ~ JanAprTNLoad, data = d)
+summary(m8) #extract coeff
+res8 <- m8$residuals
+k8<- c(1988,2013)
+B <- 10000
+
+m9<- lm(LateSummerAnoxicVol ~ JanMayTNLoad, data = d)
+summary(m9) #extract coeff
+res9 <- m9$residuals
+k9 <- c(2001, 2009)
+
+#result8 <- mcusum_test(e = res8, k = k8, B = 10000) 
+#result9 <- mcusum_test(e = res9, k = k9, B = 10000) 
+```
+
+
+# Regression Models
+- (25%) Estimates in equations (8) and (9); retype the equations in this format in your report
+
+Try to soft code estimates into the equations
+Have to get the correct estimations.
+```{r}
+coeff8 <- summary(m8)$coefficients[,1]
+coeff9 <- summary(m9)$coefficients[,1]
+se8 <- summary(m8)$coefficients[, 2]
+se9 <- summary(m9)$coefficients[, 2]
+```
+
+$$
+\hat{y}_{1t} = `r round(coeff8[1],3)` \; (`r round(se8[1],3)`) + `r format(coeff8[2],scientific=T)` \; (`r format(se8[2],scientific = TRUE)`) \; JanAprTNLoad_{t},
+\tag{8}
+$$ {#eq-8}
+
+$$
+\hat{y}_{2t} = -0.217 \; (0.426) + 5.596 \cdot 10^{-6} \; (1.360\cdot10^{-6}) \; JanMayTNLoad_{t},
+\tag{9}
+$$ {#eq-9}
+
+where $\hat{y}_{1t}$ is Chesapeake Bay early summer anoxic volumes, and $\hat{y}_{2t}$ is late summer anoxic volumes, $JanAprTNLoad_{t}$ is total nitrogen load from Susquehanna and Potomac Rivers during January–April, $JanMayTNLoad_{t}$ is total nitrogen load from Susquehanna River during January–May, and standard errors of the coefficients are shown in parentheses.
+
+- (25%) Figure 3 (can provide a different look but preserve the superscripts in axes labels and labels for the lines in A and D; format as subfigures and not separate figures)
+```{r}
+#| echo: false
+#| fig-cap: "Regression models of anoxic volumes in Chesapeake Bay: (a) anoxic volumes in early summer, fitted with (8); (d) anoxic volumes in late summer, fitted with (9); (b, e) respective residuals; (c, f) sample autocorrelation functions (ACFs) of the residuals"
+#| label: fig-three
+
+
+```
+
+- (25%) Figure 4 (this figure can be presented as separate figures)
+```{r}
+#| echo: false
+#| fig-cap: "Classification and regression trees applied to residuals of (a) model (8) for anoxic volumes in early summer, and (b) model (9) for anoxic volumes in late summer. For each node, the average value of the residuals is reported along with the node size expressed as percentage of the total sample size T = 33"
+#| label: fig-four
+
+
+```
+
+- (25%) Bootstrapped p-values (closely) corresponding to the two lines for CART in Table 2.
+```{r}
+#| echo: false
+#| tbl-cap: "Results of identifying and testing (B = 10,000) for change points in regression coefficients of the regression models for anoxic volumes in Chesapeake Bay"
+#| label: tbl-cart
+
+#kable()
+#col names: regression model, method of selecting, change poitns, bootstrapped p-value
+#2 rows:
+#early summer (8) Cart, change points = 1988, 2013
+#late summer (9) Cart, change points = 2001, 2009
+
+
+```
+

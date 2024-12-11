@@ -24,6 +24,14 @@ ccf_boot2(diff(BJsales.lead), diff(BJsales),plot="Spearman")
 #option 2-
 #write a replication file
 #load available data and replicate the results
+d <- read.csv("./data/anoxia_jmt3_SL.csv")
+
+#data exploration
+head(d)
+colnames(d)
+nrow(d)
+d$Year #1985-2018
+
 #test replicability of the study - this matters more than formatting
 #see section for math notations - LaTex in Q&A
 #paper and data set are shared
