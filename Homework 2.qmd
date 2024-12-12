@@ -3,13 +3,6 @@ title: "Replication of Lyubchich et al. (2020): A data-driven approach to detect
 author: Emi McGeady
 date: today
 format: pdf
-knitr:
-    opts_chunk:
-        message: false
-        warning: false
-        comment: "#>"
-        R.options:
-            knitr.graphics.auto_pdf: true 
 ---
 
 ```{r}
