@@ -2,7 +2,24 @@
 title: "Replication of Lyubchich et al. (2020): A data-driven approach to detecting change points in linear regression models"
 author: Emi McGeady
 date: today
-format: pdf
+format:
+    pdf:
+        fontfamily: times
+        fontsize: 11pt
+        fig-width: 8
+        fig-height: 5
+geometry:
+    - left=1in
+    - right=1in
+    - top=1in
+    - bottom=1in
+knitr:
+    opts_chunk:
+        message: false
+        warning: false
+        comment: "#>"
+        R.options:
+            knitr.graphics.auto_pdf: true 
 ---
 
 ```{r}
@@ -25,12 +42,11 @@ library(patchwork)
 ```{r}
 #| echo: false
 # Data Processing:
-
 #regression models:
 m8 <- lm(EarlySummerAnoxicVol ~ JanAprTNLoad, data = d)
 #summary(m8) #extract coeff
 
-m9<- lm(LateSummerAnoxicVol ~ JanMayTNLoad, data = d)
+m9 <- lm(LateSummerAnoxicVol ~ JanMayTNLoad, data = d)
 #summary(m9) #extract coeff
 
 coeff8 <- summary(m8)$coefficients[,1]
@@ -39,10 +55,18 @@ se8 <- summary(m8)$coefficients[, 2]
 se9 <- summary(m9)$coefficients[, 2]
 
 #make a table of the coefficients and standard errors:
+df8 <- data.frame(Model = "m8", Variable = names(coeff8), Coefficient = coeff8, SE = se8)
+df9 <- data.frame(Model = "m9", Variable = names(coeff9), Coefficient = coeff9, SE = se9)
+
+# Combine the two data frames
+merged_table <- rbind(df8, df9)
 
 ```
 # Regression Models
-- (25%) Estimates in equations (8) and (9); retype the equations in this format in your report
+```{r}
+#| tbl-cap: "Regression Model Estimates"
+kable(merged_table)
+```
 
 $$
 \hat{y}_{1t} = -0.980 \; (0.405) + 6.903 \cdot 10^{-6} \; (1.069 \cdot 10^{-6}) \; JanAprTNLoad_{t},
@@ -56,7 +80,6 @@ $$ {#eq-9}
 
 where $\hat{y}_{1t}$ is Chesapeake Bay early summer anoxic volumes, and $\hat{y}_{2t}$ is late summer anoxic volumes, $JanAprTNLoad_{t}$ is total nitrogen load from Susquehanna and Potomac Rivers during January–April, $JanMayTNLoad_{t}$ is total nitrogen load from Susquehanna River during January–May, and standard errors of the coefficients are shown in parentheses.
 
-- (25%) Figure 3 (can provide a different look but preserve the superscripts in axes labels and labels for the lines in A and D; format as subfigures and not separate figures)
 ```{r}
 #| echo: false
 #| fig-cap: "Regression models of anoxic volumes in Chesapeake Bay: (a) anoxic volumes in early summer, fitted with (8); (d) anoxic volumes in late summer, fitted with (9); (b, e) respective residuals; (c, f) sample autocorrelation functions (ACFs) of the residuals"
@@ -75,15 +98,15 @@ d$Residuals9 <-m9$residuals
 # Panel a: Early summer observed and fitted
 p1 <- ggplot(d, aes(x = Year)) +
   geom_line(aes(y = EarlySummerAnoxicVol), color = "black") +
-  geom_point(aes(y = EarlySummerAnoxicVol), color = "black") +
+  geom_point(aes(y = EarlySummerAnoxicVol), color = "black", pch = 1) +
   geom_line(aes(y = Fitted8), color = "skyblue") +
   labs(title = "(a)", y = "Early summer anoxic volume (km³)", x = "Year") +
-  theme_classic()
+  theme_classic() 
 
 # panel b: m8 residuals
 p2 <- ggplot(d, aes(x = Year)) +
   geom_line(aes(y = Residuals8), color = "black") +
-  geom_point(aes(y = Residuals8), color = "black") +
+  geom_point(aes(y = Residuals8), color = "black", pch = 1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   labs(title = "(b)", y = "Residuals (km³)", x = "Year") +
   theme_classic()
@@ -101,14 +124,14 @@ p3 <- ggplot(acf_8_data, aes(x = Lag, y = ACF)) +
 
 p4 <- ggplot(d, aes(x = Year)) +
   geom_line(aes(y = LateSummerAnoxicVol), color = "black") +
-  geom_point(aes(y = LateSummerAnoxicVol), color = "black") +
+  geom_point(aes(y = LateSummerAnoxicVol), color = "black", pch = 1) +
   geom_line(aes(y = Fitted9), color = "skyblue") +
   labs(title = "(d)", y = "Late summer anoxic volume (km³)", x = "Year") +
-  theme_classic()
+  theme_classic() 
 
 p5 <- ggplot(d, aes(x = Year)) +
   geom_line(aes(y = Residuals9), color = "black") +
-  geom_point(aes(y = Residuals9), color = "black") +
+  geom_point(aes(y = Residuals9), color = "black", pch = 1 ) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   labs(title = "(e)", y = "Residuals (km³)", x = "Year") +
   theme_classic()
@@ -126,7 +149,7 @@ p6 <- ggplot(acf_9_data, aes(x = Lag, y = ACF)) +
 (p1 | p2 | p3) / (p4 | p5 | p6)
 ```
 
-- (25%) Figure 4 (this figure can be presented as separate figures)
+
 ```{r}
 #| echo: false
 #| fig-cap: "Classification and regression trees applied to residuals of (a) model (8) for anoxic volumes in early summer, and (b) model (9) for anoxic volumes in late summer. For each node, the average value of the residuals is reported along with the node size expressed as percentage of the total sample size T = 33"
@@ -135,12 +158,18 @@ p6 <- ggplot(acf_9_data, aes(x = Lag, y = ACF)) +
 #partition by year then by year , change point is 1988 and 2013
 #load rpart.plot package for replicating the aesthetics
 #residuals are provided in fig 4 as input?
-fit8 <- rpart(m8, data = d, parms = c(1988,2013))
-fit9 <- rpart(m9, data = d, parms = c(2009,2001))
+
+earlysumcart <- rpart(m8$residuals ~ Year,
+      data = d,
+      method = 'anova')
+latesummercart <- rpart(m9$residuals ~ Year,
+                        data = d,
+                        method = 'anova')
+rpart.plot(earlysumcart)
+rpart.plot(latesummercart)
 
 ```
 
-- (25%) Bootstrapped p-values (closely) corresponding to the two lines for CART in Table 2.
 ```{r}
 #| echo: false
 #| tbl-cap: "Bootstrapped p-values by CART Method"
