@@ -26,7 +26,7 @@ knitr:
 #| echo: false
 # Load Data:
 d <- read.csv("./data/anoxia_jmt3_SL.csv")
-
+d <- d[-nrow(d), ]
 #Load Packages:
 library(rpart)
 #rpart::cart()
@@ -64,6 +64,7 @@ merged_table <- rbind(df8, df9)
 ```
 # Regression Models
 ```{r}
+#| echo: false
 #| tbl-cap: "Regression Model Estimates"
 kable(merged_table)
 ```
@@ -89,17 +90,22 @@ where $\hat{y}_{1t}$ is Chesapeake Bay early summer anoxic volumes, and $\hat{y}
 
 #add fitted values to the dataframe:
 #remove last row with NAs:
-d <- d[-nrow(d), ]
 d$Fitted8 <- predict(m8)
 d$Fitted9 <- predict(m9)
 d$Residuals8 <-m8$residuals
 d$Residuals9 <-m9$residuals
-
+library(ggrepel)
 # Panel a: Early summer observed and fitted
 p1 <- ggplot(d, aes(x = Year)) +
   geom_line(aes(y = EarlySummerAnoxicVol), color = "black") +
+  annotate(
+    "text", x = 1988, y = 0, label = "Observed", color = "black", size = 3
+  ) +
   geom_point(aes(y = EarlySummerAnoxicVol), color = "black", pch = 1) +
   geom_line(aes(y = Fitted8), color = "skyblue") +
+  annotate(
+    "text", x = 1986, y = 2.2, label = "Fitted", color = "skyblue", size = 3
+  ) +
   labs(title = "(a)", y = "Early summer anoxic volume (km³)", x = "Year") +
   theme_classic() 
 
@@ -124,8 +130,14 @@ p3 <- ggplot(acf_8_data, aes(x = Lag, y = ACF)) +
 
 p4 <- ggplot(d, aes(x = Year)) +
   geom_line(aes(y = LateSummerAnoxicVol), color = "black") +
+  annotate(
+    "text", x = 1988, y = 3, label = "Observed", color = "black", size = 3
+  ) +
   geom_point(aes(y = LateSummerAnoxicVol), color = "black", pch = 1) +
   geom_line(aes(y = Fitted9), color = "skyblue") +
+  annotate(
+    "text", x = 1988, y = 1.2, label = "Fitted", color = "skyblue", size = 3
+  ) +
   labs(title = "(d)", y = "Late summer anoxic volume (km³)", x = "Year") +
   theme_classic() 
 
@@ -158,13 +170,15 @@ p6 <- ggplot(acf_9_data, aes(x = Lag, y = ACF)) +
 #partition by year then by year , change point is 1988 and 2013
 #load rpart.plot package for replicating the aesthetics
 #residuals are provided in fig 4 as input?
+control8 <- rpart.control(minsplit = 4, maxdepth = 2)
+control9 <- rpart.control(minsplit = 25, maxdepth = 2)
 
 earlysumcart <- rpart(m8$residuals ~ Year,
       data = d,
-      method = 'anova')
+      control=control8)
 latesummercart <- rpart(m9$residuals ~ Year,
                         data = d,
-                        method = 'anova')
+                        control = control9)
 rpart.plot(earlysumcart)
 rpart.plot(latesummercart)
 
