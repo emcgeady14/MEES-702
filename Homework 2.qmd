@@ -12,12 +12,14 @@ d <- read.csv("./data/anoxia_jmt3_SL.csv")
 
 #Load Packages:
 library(rpart)
-#rpart::rpart() package
 #rpart::cart()
-#library(rpart.plot)
+library(rpart.plot)
 library(funtimes)
 #funtimes::mcusum.test()
 library(knitr)
+
+library(ggplot2)
+library(patchwork)
 ```
 
 ```{r}
@@ -26,35 +28,24 @@ library(knitr)
 
 #regression models:
 m8 <- lm(EarlySummerAnoxicVol ~ JanAprTNLoad, data = d)
-summary(m8) #extract coeff
-res8 <- m8$residuals
-k8<- c(1988,2013)
-B <- 10000
+#summary(m8) #extract coeff
 
 m9<- lm(LateSummerAnoxicVol ~ JanMayTNLoad, data = d)
-summary(m9) #extract coeff
-res9 <- m9$residuals
-k9 <- c(2001, 2009)
+#summary(m9) #extract coeff
 
-#result8 <- mcusum_test(e = res8, k = k8, B = 10000) 
-#result9 <- mcusum_test(e = res9, k = k9, B = 10000) 
-```
-
-
-# Regression Models
-- (25%) Estimates in equations (8) and (9); retype the equations in this format in your report
-
-Try to soft code estimates into the equations
-Have to get the correct estimations.
-```{r}
 coeff8 <- summary(m8)$coefficients[,1]
 coeff9 <- summary(m9)$coefficients[,1]
 se8 <- summary(m8)$coefficients[, 2]
 se9 <- summary(m9)$coefficients[, 2]
+
+#make a table of the coefficients and standard errors:
+
 ```
+# Regression Models
+- (25%) Estimates in equations (8) and (9); retype the equations in this format in your report
 
 $$
-\hat{y}_{1t} = `r round(coeff8[1],3)` \; (`r round(se8[1],3)`) + `r format(coeff8[2],scientific=T)` \; (`r format(se8[2],scientific = TRUE)`) \; JanAprTNLoad_{t},
+\hat{y}_{1t} = -0.980 \; (0.405) + 6.903 \cdot 10^{-6} \; (1.069 \cdot 10^{-6}) \; JanAprTNLoad_{t},
 \tag{8}
 $$ {#eq-8}
 
@@ -71,7 +62,68 @@ where $\hat{y}_{1t}$ is Chesapeake Bay early summer anoxic volumes, and $\hat{y}
 #| fig-cap: "Regression models of anoxic volumes in Chesapeake Bay: (a) anoxic volumes in early summer, fitted with (8); (d) anoxic volumes in late summer, fitted with (9); (b, e) respective residuals; (c, f) sample autocorrelation functions (ACFs) of the residuals"
 #| label: fig-three
 
+#attempt making aesthetics better...
 
+#add fitted values to the dataframe:
+#remove last row with NAs:
+d <- d[-nrow(d), ]
+d$Fitted8 <- predict(m8)
+d$Fitted9 <- predict(m9)
+d$Residuals8 <-m8$residuals
+d$Residuals9 <-m9$residuals
+
+# Panel a: Early summer observed and fitted
+p1 <- ggplot(d, aes(x = Year)) +
+  geom_line(aes(y = EarlySummerAnoxicVol), color = "black") +
+  geom_point(aes(y = EarlySummerAnoxicVol), color = "black") +
+  geom_line(aes(y = Fitted8), color = "skyblue") +
+  labs(title = "(a)", y = "Early summer anoxic volume (km³)", x = "Year") +
+  theme_classic()
+
+# panel b: m8 residuals
+p2 <- ggplot(d, aes(x = Year)) +
+  geom_line(aes(y = Residuals8), color = "black") +
+  geom_point(aes(y = Residuals8), color = "black") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  labs(title = "(b)", y = "Residuals (km³)", x = "Year") +
+  theme_classic()
+
+# panel c: acf
+acf_8 <- acf(m8$residuals,plot=F)
+acf_8_data <- data.frame(Lag = acf_8$lag, ACF = acf_8$acf)
+
+p3 <- ggplot(acf_8_data, aes(x = Lag, y = ACF)) +
+  geom_segment(aes(xend = Lag, yend = 0)) +
+  geom_hline(yintercept = c(-0.2, 0.2), linetype = "dashed", color = "blue") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(title = "(c)", x = "Lag (years)", y = "ACF of residuals") +
+  theme_classic()
+
+p4 <- ggplot(d, aes(x = Year)) +
+  geom_line(aes(y = LateSummerAnoxicVol), color = "black") +
+  geom_point(aes(y = LateSummerAnoxicVol), color = "black") +
+  geom_line(aes(y = Fitted9), color = "skyblue") +
+  labs(title = "(d)", y = "Late summer anoxic volume (km³)", x = "Year") +
+  theme_classic()
+
+p5 <- ggplot(d, aes(x = Year)) +
+  geom_line(aes(y = Residuals9), color = "black") +
+  geom_point(aes(y = Residuals9), color = "black") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  labs(title = "(e)", y = "Residuals (km³)", x = "Year") +
+  theme_classic()
+
+acf_9 <- acf(m9$residuals, plot=F)
+acf_9_data <- data.frame(Lag = acf_9$lag, ACF = acf_9$acf)
+
+p6 <- ggplot(acf_9_data, aes(x = Lag, y = ACF)) +
+  geom_segment(aes(xend = Lag, yend = 0)) +
+  geom_hline(yintercept = c(-0.2, 0.2), linetype = "dashed", color = "blue") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(title = "(f)", x = "Lag (years)", y = "ACF of residuals") +
+  theme_classic()
+
+(p1 | p2 | p3) / (p4 | p5 | p6)
 ```
 
 - (25%) Figure 4 (this figure can be presented as separate figures)
@@ -79,17 +131,35 @@ where $\hat{y}_{1t}$ is Chesapeake Bay early summer anoxic volumes, and $\hat{y}
 #| echo: false
 #| fig-cap: "Classification and regression trees applied to residuals of (a) model (8) for anoxic volumes in early summer, and (b) model (9) for anoxic volumes in late summer. For each node, the average value of the residuals is reported along with the node size expressed as percentage of the total sample size T = 33"
 #| label: fig-four
-
+#CLASSIFICATION REGRESSION TREES M- CART for figure 4, need rpart::rpart package and function
+#partition by year then by year , change point is 1988 and 2013
+#load rpart.plot package for replicating the aesthetics
+#residuals are provided in fig 4 as input?
+fit8 <- rpart(m8, data = d, parms = c(1988,2013))
+fit9 <- rpart(m9, data = d, parms = c(2009,2001))
 
 ```
 
 - (25%) Bootstrapped p-values (closely) corresponding to the two lines for CART in Table 2.
 ```{r}
 #| echo: false
-#| tbl-cap: "Results of identifying and testing (B = 10,000) for change points in regression coefficients of the regression models for anoxic volumes in Chesapeake Bay"
-#| label: tbl-cart
+#| tbl-cap: "Bootstrapped p-values by CART Method"
 
-#kable()
+res8 <- m8$residuals
+k8<- c(14,29)
+B <- 10000
+
+res9 <- m9$residuals
+#extract index for years 2001, 2009
+k9 <- c(17,25)
+
+result8 <- mcusum_test(e = res8, k = k8, B = 10000)
+result9 <- mcusum_test(e = res9, k = k9, B = 10000)
+
+bootstrap_pval <- c(result8$p.value, result9$p.value)
+
+#make table prettier...
+kable(bootstrap_pval)
 #col names: regression model, method of selecting, change poitns, bootstrapped p-value
 #2 rows:
 #early summer (8) Cart, change points = 1988, 2013

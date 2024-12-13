@@ -1,0 +1,24 @@
+---
+title: "Homework 2: Speed up the function funtimes::ccf_boot()"
+author: Emi McGeady
+date: today
+format: pdf
+---
+```{r}
+#load packages
+library(funtimes)
+```
+
+
+```{r}
+#original function
+ccf_boot(diff(BJsales.lead), diff(BJsales),plot="Spearman") 
+
+#sped up function
+
+```
+
+```{r}
+
+```
+
