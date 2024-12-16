@@ -27,14 +27,12 @@ knitr:
 # Load Data:
 d <- read.csv("./data/anoxia_jmt3_SL.csv")
 d <- d[-nrow(d), ]
+
 #Load Packages:
 library(rpart)
-#rpart::cart()
 library(rpart.plot)
 library(funtimes)
-#funtimes::mcusum.test()
 library(knitr)
-
 library(ggplot2)
 library(patchwork)
 ```
@@ -44,10 +42,8 @@ library(patchwork)
 # Data Processing:
 #regression models:
 m8 <- lm(EarlySummerAnoxicVol ~ JanAprTNLoad, data = d)
-#summary(m8) #extract coeff
 
 m9 <- lm(LateSummerAnoxicVol ~ JanMayTNLoad, data = d)
-#summary(m9) #extract coeff
 
 coeff8 <- summary(m8)$coefficients[,1]
 coeff9 <- summary(m9)$coefficients[,1]
@@ -70,12 +66,12 @@ kable(merged_table)
 ```
 
 $$
-\hat{y}_{1t} = -0.980 \; (0.405) + 6.903 \cdot 10^{-6} \; (1.069 \cdot 10^{-6}) \; JanAprTNLoad_{t},
+\hat{y}_{1t} = \underset{(0.405)}{-0.980} + \underset{(1.069 \cdot 10^{-6})}{6.903 \cdot 10^{-6}} \; JanAprTNLoad_{t},
 \tag{8}
 $$ {#eq-8}
 
 $$
-\hat{y}_{2t} = -0.217 \; (0.426) + 5.596 \cdot 10^{-6} \; (1.360\cdot10^{-6}) \; JanMayTNLoad_{t},
+\hat{y}_{2t} = \underset{(0.426)}{-0.217} + \underset{(1.360\cdot10^{-6})}{5.596 \cdot 10^{-6} \; } \; JanMayTNLoad_{t},
 \tag{9}
 $$ {#eq-9}
 
@@ -86,15 +82,12 @@ where $\hat{y}_{1t}$ is Chesapeake Bay early summer anoxic volumes, and $\hat{y}
 #| fig-cap: "Regression models of anoxic volumes in Chesapeake Bay: (a) anoxic volumes in early summer, fitted with (8); (d) anoxic volumes in late summer, fitted with (9); (b, e) respective residuals; (c, f) sample autocorrelation functions (ACFs) of the residuals"
 #| label: fig-three
 
-#attempt making aesthetics better...
-
-#add fitted values to the dataframe:
-#remove last row with NAs:
+#add fitted values to the data frame:
 d$Fitted8 <- predict(m8)
 d$Fitted9 <- predict(m9)
 d$Residuals8 <-m8$residuals
 d$Residuals9 <-m9$residuals
-library(ggrepel)
+
 # Panel a: Early summer observed and fitted
 p1 <- ggplot(d, aes(x = Year)) +
   geom_line(aes(y = EarlySummerAnoxicVol), color = "black") +
@@ -117,7 +110,7 @@ p2 <- ggplot(d, aes(x = Year)) +
   labs(title = "(b)", y = "Residuals (km³)", x = "Year") +
   theme_classic()
 
-# panel c: acf
+# panel c: acf m8
 acf_8 <- acf(m8$residuals,plot=F)
 acf_8_data <- data.frame(Lag = acf_8$lag, ACF = acf_8$acf)
 
@@ -128,6 +121,7 @@ p3 <- ggplot(acf_8_data, aes(x = Lag, y = ACF)) +
   labs(title = "(c)", x = "Lag (years)", y = "ACF of residuals") +
   theme_classic()
 
+# panel d: late summer observed vs fitted
 p4 <- ggplot(d, aes(x = Year)) +
   geom_line(aes(y = LateSummerAnoxicVol), color = "black") +
   annotate(
@@ -141,6 +135,7 @@ p4 <- ggplot(d, aes(x = Year)) +
   labs(title = "(d)", y = "Late summer anoxic volume (km³)", x = "Year") +
   theme_classic() 
 
+# panel e: m9 residuals
 p5 <- ggplot(d, aes(x = Year)) +
   geom_line(aes(y = Residuals9), color = "black") +
   geom_point(aes(y = Residuals9), color = "black", pch = 1 ) +
@@ -148,6 +143,7 @@ p5 <- ggplot(d, aes(x = Year)) +
   labs(title = "(e)", y = "Residuals (km³)", x = "Year") +
   theme_classic()
 
+#panel f: acf m9
 acf_9 <- acf(m9$residuals, plot=F)
 acf_9_data <- data.frame(Lag = acf_9$lag, ACF = acf_9$acf)
 
@@ -166,19 +162,17 @@ p6 <- ggplot(acf_9_data, aes(x = Lag, y = ACF)) +
 #| echo: false
 #| fig-cap: "Classification and regression trees applied to residuals of (a) model (8) for anoxic volumes in early summer, and (b) model (9) for anoxic volumes in late summer. For each node, the average value of the residuals is reported along with the node size expressed as percentage of the total sample size T = 33"
 #| label: fig-four
-#CLASSIFICATION REGRESSION TREES M- CART for figure 4, need rpart::rpart package and function
-#partition by year then by year , change point is 1988 and 2013
-#load rpart.plot package for replicating the aesthetics
-#residuals are provided in fig 4 as input?
-control8 <- rpart.control(minsplit = 4, maxdepth = 2)
-control9 <- rpart.control(minsplit = 25, maxdepth = 2)
 
 earlysumcart <- rpart(m8$residuals ~ Year,
-      data = d,
-      control=control8)
+                      data = d,
+                      method = "anova",
+                      control = rpart.control(minbucket = 4, maxdepth = 2))
+
 latesummercart <- rpart(m9$residuals ~ Year,
-                        data = d,
-                        control = control9)
+                       data = d,
+                       method = "anova",
+                       control = rpart.control(minbucket = 4, maxdepth = 2))
+
 rpart.plot(earlysumcart)
 rpart.plot(latesummercart)
 
@@ -189,7 +183,7 @@ rpart.plot(latesummercart)
 #| tbl-cap: "Bootstrapped p-values by CART Method"
 
 res8 <- m8$residuals
-k8<- c(14,29)
+k8<- c(4,29) #1988, 2013
 B <- 10000
 
 res9 <- m9$residuals
@@ -201,13 +195,20 @@ result9 <- mcusum_test(e = res9, k = k9, B = 10000)
 
 bootstrap_pval <- c(result8$p.value, result9$p.value)
 
-#make table prettier...
-kable(bootstrap_pval)
-#col names: regression model, method of selecting, change poitns, bootstrapped p-value
-#2 rows:
+#kable(bootstrap_pval)
+
+df1 <- data.frame(Model = "8", P_value = bootstrap_pval[1])
+df2 <- data.frame(Model = "9", P_value = bootstrap_pval[2])
+
+# Combine the two data frames
+pvaluetable <- rbind(df1, df2)
+
+kable(pvaluetable)
 #early summer (8) Cart, change points = 1988, 2013
 #late summer (9) Cart, change points = 2001, 2009
 
 
 ```
+
+
 
